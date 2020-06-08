@@ -1,0 +1,55 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 202588910bd72805018f8bf152a639e471976bc07946fee9a1aedaed55bdb558
+
+name:           wrangle
+version:        0.1.0.0
+synopsis:       User-friendly data cleaning
+description:    Please see the README on GitHub at <https://github.com/ngriffiths21/wrangle#readme>
+category:       Data Science
+homepage:       https://github.com/ngriffiths21/wrangle#readme
+bug-reports:    https://github.com/ngriffiths21/wrangle/issues
+author:         Nick Griffiths
+maintainer:     ngriffiths21@gmail.com
+copyright:      2020 Nick Griffiths
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/ngriffiths21/wrangle
+
+library
+  exposed-modules:
+      Lib
+  other-modules:
+      Paths_wrangle
+  hs-source-dirs:
+      src
+  default-extensions: EmptyCase FlexibleContexts FlexibleInstances InstanceSigs MultiParamTypeClasses LambdaCase MultiWayIf NamedFieldPuns TupleSections OverloadedStrings DeriveFoldable DeriveFunctor DeriveGeneric DeriveLift DeriveTraversable DerivingStrategies GeneralizedNewtypeDeriving StandaloneDeriving
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+  build-depends:
+      base >=4.7 && <5
+  default-language: Haskell2010
+
+test-suite wrangle-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_wrangle
+  hs-source-dirs:
+      test
+  default-extensions: EmptyCase FlexibleContexts FlexibleInstances InstanceSigs MultiParamTypeClasses LambdaCase MultiWayIf NamedFieldPuns TupleSections OverloadedStrings DeriveFoldable DeriveFunctor DeriveGeneric DeriveLift DeriveTraversable DerivingStrategies GeneralizedNewtypeDeriving StandaloneDeriving
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , wrangle
+  default-language: Haskell2010
