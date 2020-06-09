@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c434ad2d83fa4f6af19fd7a27754a52eea7c474933956b0336151e7bc0db3c02
+-- hash: 6b7e5611bee4a51e2ce062163a665a1de1bbfb85fdb901bb85a1f732e698d656
 
 name:           wrangle
 version:        0.1.0.0
@@ -30,7 +30,6 @@ source-repository head
 library
   exposed-modules:
       Data.Wrangle
-      Lib
   other-modules:
       Paths_wrangle
   hs-source-dirs:
@@ -40,6 +39,7 @@ library
   build-depends:
       base >=4.7 && <5
     , mtl
+    , text
   default-language: Haskell2010
 
 test-suite wrangle-test
@@ -55,5 +55,6 @@ test-suite wrangle-test
       base >=4.7 && <5
     , hspec
     , mtl
+    , text
     , wrangle
   default-language: Haskell2010
