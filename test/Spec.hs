@@ -1,24 +1,33 @@
 import Test.Hspec
-import Data.Wrangle as W
+import Data.Wrangle
 import Control.Monad.State.Lazy
 
 main :: IO ()
 main = hspec $ do
   describe "Data.Wrangle.runPipe" $ do
     it "can run an empty pipeline" $ do
-      W.runPipe $ pure ()
+      runPipe $ pure ()
 
   describe "Data.Wrangle.log" $ do
     it "can log the current state" $ do
-      W.runPipe W.logState
+      runPipe logState
 
   describe "Data.Wrangle.select" $ do
     it "can select some variables" $ do
-      res `shouldReturn` ["a"] where
-        res = W.runPipe $ do
-          put testData
-          select ["a"]
-          names
+        let res = runPipe $ do
+                put testData
+                select ["a"]
+                names
+        res `shouldReturn` ["a"]
 
-testData :: W.DataFrame
-testData = [("a", ["a value 1"]), ("b", ["b value 1"])]
+  describe "Data.Wrangle.filter" $ do
+    it "can filter out rows" $ do
+      let res = runPipe $ do
+            put testData
+            df <- get
+            filt "a" (=="bar")
+            dims
+      res `shouldReturn` [1,2]
+
+testData :: DataFrame
+testData = [("a", ["foo", "bar"]), ("b", ["foobar", "foobaz"])]
