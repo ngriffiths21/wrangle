@@ -1,9 +1,12 @@
 module Data.Wrangle ( Column
                     , Mutation (Mutation)
+                    , Record (A,I,Grp)
+                    , fromList
+                    , grp
+                    , mkFolder
                     , runPipe
                     , logState
                     , select
-                    , filt
                     , names
                     , dims
                     , execute
@@ -11,21 +14,39 @@ module Data.Wrangle ( Column
 
 import Control.Monad.State.Lazy
 import qualified Data.Text as T
-import Data.Bifunctor
+import GHC.Exts (groupWith)
 
 type ColName = T.Text
-type Record = [T.Text]
+data Record a = A | I | Grp Int a
+  deriving (Show,Eq,Functor)
+
+grp :: Record a -> Maybe Int
+grp A = Nothing
+grp I = Nothing
+grp (Grp x _) = Just x
+
+instance (Semigroup a) => Semigroup (Record a) where
+  I <> _ = I
+  _ <> I = I
+  A <> _ = A
+  _ <> A = A
+  (Grp i x) <> (Grp j y)
+    | i == j = Grp i (x <> y)
+    | otherwise = I
+
+fromList :: [T.Text] -> [Record T.Text]
+fromList xs = fmap (Grp 1) xs
 
 data Mutation = Mutation { cols :: [ColName]
-                         , mut :: [Record] -> Record
+                         , mut :: [[Record T.Text]] -> [Record T.Text]
                          }
-
+  
 instance Show Mutation where
-  show x = "Mutation"
+  show _ = "Mutation"
 
-type Column = (ColName, Either Record Mutation)
+type Column = (ColName, Either [Record T.Text] Mutation)
 
-type ConcreteColumn = (ColName, Record)
+type ConcreteColumn = (ColName, [Record T.Text])
 
 logState :: (Show s) => StateT s IO ()
 logState = do
@@ -48,35 +69,26 @@ runMutation cols name = let
        (nm, Left r) -> (nm, r)
        (nm, (Right mt)) -> (nm, doMutate cols mt)
 
-doMutate :: [Column] -> Mutation -> Record
+doMutate :: [Column] -> Mutation -> [Record T.Text]
 doMutate df Mutation{cols, mut} = let
   concrete = fmap (runMutation df) cols 
-  in mut (fmap snd concrete)
+  in applyMut mut (fmap snd concrete)
   
 select :: [T.Text] -> StateT [Column] IO ()
 select vars = modify $ selectByName vars
 
-filt df f var = let
-  selection = fmap f (snd . head $ selectByName [var] df)
-  out = fmap (second (filtBool selection)) df
-  in out
+-- works with one-column mutations, unclear what happens when groups conflict
+applyMut :: ([[Record T.Text]] -> [Record T.Text]) -> [[Record T.Text]] -> [Record T.Text]
+applyMut fn x = let
+  grouped = sequenceA $ fmap (groupWith grp) x
+  in mconcat $ fmap fn grouped
 
-
-filtBool :: [Bool] -> [a] -> [a]
-filtBool b xs = fmap snd $ filter fst (zip b xs)
+mkFolder :: (Record a -> Record a -> Record a) -> [Record a] -> [Record a]
+mkFolder fn l@(x:xs) = (foldl (fn) x xs) <$ l
+mkFolder _ [] = []
 
 selectByName :: Eq a => [a] -> [(a, b)] -> [(a, b)]
 selectByName vars df = filter (flip elem vars . fst) df
-
-{-
-calc :: (T.Text -> T.Text) -> ([T.Text] -> [T.Text]) -> [T.Text] -> StateT [Column] IO ()
-calc namef valf cols = do
-  df <- get
-  let old = selectByName cols df
-      trans (nms, vals) = (namef nms, valf vals)
-      out = fmap trans old
-  put (df ++ out)
--}
 
 names :: StateT [Column] IO [T.Text]
 names = get >>= return . fmap fst
@@ -85,3 +97,4 @@ dims :: StateT [Column] IO [Int]
 dims = do
   df <- get
   pure [length (snd (head df)), length df]
+

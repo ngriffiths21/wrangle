@@ -1,6 +1,7 @@
 import Test.Hspec
 import Data.Wrangle
 import Control.Monad.State.Lazy
+import GHC.Exts (groupWith)
 
 main :: IO ()
 main = hspec $ do
@@ -35,14 +36,23 @@ main = hspec $ do
             put testDataMut
             execute
       res `shouldReturn`
-        [("a", ["abc", "def"]), ("f", ["abcfizz", "deffizz"])]
+        [("a", fromList ["abc", "def"]), ("f", fromList ["abcfizz", "deffizz"])]
 
+  describe "Data.Wrangle.execute" $ do
+    it "can do a grouped calculation" $ do
+      let res = runPipe $ do
+            put testDataGrp
+            execute
+      res `shouldReturn`
+        [("a", [Grp 1 "a", Grp 1 "b", Grp 2 "c", Grp 2 "d"]),
+         ("f", [Grp 1 "ab", Grp 1 "ab", Grp 2 "cd", Grp 2 "cd"])]
 
 testData :: [Column]
-testData = [("a", Left ["foo", "bar"]), ("b", Left ["foobar", "foobaz"])]
-
-testDataGrp :: [Column]
-testDataGrp = [("group", Left ["1","1","2","2"]), ("value", Left ["a","b","c","d"])]
+testData = [("a", Left $ fromList ["foo", "bar"]), ("b", Left $ fromList ["foobar", "foobaz"])]
 
 testDataMut :: [Column]
-testDataMut = [("a", Left ["abc", "def"]), ("f", Right $ Mutation ["a"] (\[x] -> fmap (<>"fizz") x))]
+testDataMut = [("a", Left (fromList ["abc", "def"])), ("f", Right $ Mutation ["a"] (\[x] -> fmap (fmap (<>"fizz")) x))]
+
+testDataGrp :: [Column]
+testDataGrp = [("a", Left [Grp 1 "a", Grp 1 "b", Grp 2 "c", Grp 2 "d"]),
+               ("f", Right $ Mutation ["a"] (\[x] -> mkFolder (<>) x))]
